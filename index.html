@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arbitrage - Multi-Bet Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background: #f2f2f2;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    label, input, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .result {
+      background: #e6ffe6;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #b2ffb2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Arbitrage - Multi-Bet Calculator</h1>
+  <label for="odds">Enter all odds (positive only), separated by commas:</label>
+  <input type="text" id="odds" placeholder="e.g. 150,220,160" />
+
+  <button onclick="calculateMultiArb()">Calculate Arbitrage</button>
+
+  <div class="result" id="result"></div>
+
+  <script>
+    function calculateMultiArb() {
+      const input = document.getElementById('odds').value;
+      const odds = input.split(',').map(o => parseFloat(o.trim()));
+      const totalBet = 100;
+
+      if (odds.some(isNaN)) {
+        document.getElementById('result').innerHTML = "Please enter valid odds (e.g. 150,220,160)";
+        return;
+      }
+
+      const impliedProbs = odds.map(o => 100 / (o + 100));
+      const totalProb = impliedProbs.reduce((a, b) => a + b, 0);
+
+      if (totalProb >= 1) {
+        document.getElementById('result').innerHTML = `No arbitrage opportunity. Total implied probability is ${(totalProb * 100).toFixed(2)}%.`;
+        return;
+      }
+
+      const stakes = impliedProbs.map(p => (p / totalProb) * totalBet);
+      const profits = odds.map((o, i) => (stakes[i] * o / 100) - (totalBet - stakes[i]));
+
+      let output = '<strong>Arbitrage Found!</strong><br>';
+      stakes.forEach((s, i) => {
+        output += `Bet $${s.toFixed(2)} on outcome ${i + 1} (odds +${odds[i]})<br>`;
+      });
+      profits.forEach((p, i) => {
+        output += `Profit if outcome ${i + 1} wins: $${p.toFixed(2)}<br>`;
+      });
+      output += `Total Implied Probability: ${(totalProb * 100).toFixed(2)}%`;
+
+      document.getElementById('result').innerHTML = output;
+    }
+  </script>
+</body>
+</html>
